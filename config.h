@@ -1,4 +1,5 @@
 #include "fibonacci.c"
+#include "layouts.c"
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
@@ -51,6 +52,7 @@ static const Layout layouts[] = {
 
  	{ "[@]",      spiral },
  	{ "[\\]",      dwindle },
+	{ "HHH",      grid },
 };
 
 /* key definitions */
@@ -95,6 +97,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,				XK_e,      setlayout,      {.v = &layouts[4]} }, /* centeredfloatingmaster */
 	{ MODKEY,						XK_s,      setlayout,      {.v = &layouts[5]} }, /* spiral */
 	{ MODKEY|ShiftMask,				XK_s,      setlayout,      {.v = &layouts[6]} }, /* dwindle */
+	{ MODKEY|ShiftMask,             XK_g,      setlayout,      {.v = &layouts[7]} }, /* grid */
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
