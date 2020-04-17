@@ -171,6 +171,7 @@ static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
 static Atom getatomprop(Client *c, Atom prop);
+static int getdwmblockspid();
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
@@ -195,6 +196,7 @@ static void resizeclient(Client *c, int x, int y, int w, int h);
 static void resizemouse(const Arg *arg);
 static void restack(Monitor *m);
 static void run(void);
+static void runAutostart(void);
 static void scan(void);
 static int sendevent(Client *c, Atom proto);
 static void sendmon(Client *c, Monitor *m);
@@ -207,6 +209,7 @@ static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void sigchld(int unused);
+static void sigdwmblocks(const Arg *arg);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
@@ -242,8 +245,8 @@ static void centeredfloatingmaster(Monitor *m);
 static const char broken[] = "broken";
 static char stext[256];
 static char rawstext[256];
-static int statuscmdn;
-static char lastbutton[] = "-";
+static int dwmblockssig;
+pid_t dwmblockspid = 0;
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
@@ -428,7 +431,6 @@ buttonpress(XEvent *e)
 	Client *c;
 	Monitor *m;
 	XButtonPressedEvent *ev = &e->xbutton;
-	*lastbutton = '0' + ev->button;
 
 	click = ClkRootWin;
 	/* focus monitor if necessary */
@@ -453,7 +455,7 @@ buttonpress(XEvent *e)
 			char *text = rawstext;
 			int i = -1;
 			char ch;
-			statuscmdn = 0;
+			dwmblockssig = 0;
 			while (text[++i]) {
 				if ((unsigned char)text[i] < ' ') {
 					ch = text[i];
@@ -463,7 +465,7 @@ buttonpress(XEvent *e)
 					text += i+1;
 					i = -1;
 					if (x >= ev->x) break;
-					if (ch <= LENGTH(statuscmds)) statuscmdn = ch - 1;
+					dwmblockssig = ch;
 				}
 			}
 		} else
@@ -907,6 +909,18 @@ getatomprop(Client *c, Atom prop)
 		XFree(p);
 	}
 	return atom;
+}
+
+int
+getdwmblockspid()
+{
+	char buf[16];
+	FILE *fp = popen("pidof -s dwmblocks", "r");
+	fgets(buf, sizeof(buf), fp);
+	pid_t pid = strtoul(buf, NULL, 10);
+	pclose(fp);
+	dwmblockspid = pid;
+	return pid != 0 ? 0 : -1;
 }
 
 int
@@ -1419,6 +1433,11 @@ run(void)
 }
 
 void
+runAutostart(void) {
+	system("export STATUSBAR=\"dwmblocks\" ; killall dwmblocks ; dwmblocks &");
+}
+
+void
 scan(void)
 {
 	unsigned int i, num;
@@ -1675,14 +1694,27 @@ sigchld(int unused)
 }
 
 void
+sigdwmblocks(const Arg *arg)
+{
+	union sigval sv;
+	sv.sival_int = (dwmblockssig << 8) | arg->i;
+	if (!dwmblockspid)
+		if (getdwmblockspid() == -1)
+			return;
+
+	if (sigqueue(dwmblockspid, SIGUSR1, sv) == -1) {
+		if (errno == ESRCH) {
+			if (!getdwmblockspid())
+				sigqueue(dwmblockspid, SIGUSR1, sv);
+		}
+	}
+}
+
+void
 spawn(const Arg *arg)
 {
 	if (arg->v == dmenucmd)
 		dmenumon[0] = '0' + selmon->num;
-	else if (arg->v == statuscmd) {
-		statuscmd[2] = statuscmds[statuscmdn];
-		setenv("BUTTON", lastbutton, 1);
-	}
 	if (fork() == 0) {
 		if (dpy)
 			close(ConnectionNumber(dpy));
@@ -2188,6 +2220,7 @@ main(int argc, char *argv[])
 		die("pledge");
 #endif /* __OpenBSD__ */
 	scan();
+	runAutostart();
 	run();
 	cleanup();
 	XCloseDisplay(dpy);
