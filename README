@@ -7,7 +7,9 @@ Requirements
 ------------
 
 - xlib In order to build dwm you need the Xlib header files.
-- rofi https://github.com/davatorium/rofi/blob/next/INSTALL.md
+- rofi (app launcher) https://github.com/davatorium/rofi/blob/next/INSTALL.md
+- stterm (terminal emulator)
+- Fira Code (font)
 
 Installation
 ------------
