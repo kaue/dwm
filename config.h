@@ -1,3 +1,4 @@
+#include "fibonacci.c"
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
