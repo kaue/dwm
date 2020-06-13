@@ -6,10 +6,10 @@ dwm is an extremely fast, small, and dynamic window manager for X.
 Requirements
 ------------
 
-- xlib In order to build dwm you need the Xlib header files.
-- rofi (app launcher) https://github.com/davatorium/rofi/blob/next/INSTALL.md
-- stterm (terminal emulator)
-- Fira Code (font)
+- `libxft-bgra` required until the libxft upstream is fixed. (emoji support)
+- `xlib` In order to build dwm you need the Xlib header files.
+- `dmenu` (app launcher) https://github.com/kaue/dmenu
+- `stterm` (terminal emulator)
 
 Installation
 ------------
