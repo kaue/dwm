@@ -1514,7 +1514,7 @@ run(void)
 
 void
 runAutostart(void) {
-	system("export STATUSBAR=\"dwmblocks\" ; killall dwmblocks ; dwmblocks &");
+	system("export STATUSBAR=\"dwmblocks\" ; dwmblocks &");
 }
 
 void
